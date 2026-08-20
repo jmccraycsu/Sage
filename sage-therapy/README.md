@@ -16,6 +16,18 @@ cp .env.example .env
 
 Edit `.env` and restart the app after changing credentials.
 
+Required production values:
+
+```env
+OPENAI_API_KEY=sk-your-key
+OPENAI_TEXT_MODEL=gpt-5.6
+CARTESIA_API_KEY=sk_car_your-key
+CARTESIA_VOICE_ID=your-selected-voice-id
+CARTESIA_MODEL=sonic-3.5
+```
+
+`OPENAI_API_KEY` powers both Realtime transcription and original grounded responses. When Sage detects a current factual question, the response pipeline enables OpenAI's built-in web-search tool and requests authoritative sources. No separate search API key is required.
+
 ## Turn on Sage's ears — OpenAI Realtime transcription
 
 1. Add the server-side `OPENAI_API_KEY` to `.env`.
