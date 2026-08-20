@@ -3,6 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const ROOT = __dirname, DATA = path.join(ROOT,'data.json'), PUBLIC = path.join(ROOT,'public');
+// Tiny .env loader so the demo stays dependency-free. Production should use a secret manager.
+const envFile=path.join(ROOT,'.env');
+if(fs.existsSync(envFile)) fs.readFileSync(envFile,'utf8').split(/\r?\n/).forEach(line=>{const m=line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);if(m&&!process.env[m[1]])process.env[m[1]]=m[2].replace(/^['"]|['"]$/g,'')});
 const tokens = new Map();
 const read = () => JSON.parse(fs.readFileSync(DATA,'utf8'));
 const write = d => fs.writeFileSync(DATA,JSON.stringify(d,null,2));
@@ -31,6 +34,18 @@ const server=http.createServer(async(req,res)=>{
   if(p==='/api/register'&&m==='POST'){const b=await body(req),d=read();if(d.users.some(x=>x.email.toLowerCase()===String(b.email).toLowerCase()))return send(res,409,{error:'An account already exists'});const user={id:id('u'),name:b.name,email:b.email,password:b.password,partnerId:null,avatar:b.name[0].toUpperCase(),createdAt:new Date().toISOString()};d.users.push(user);write(d);const t=crypto.randomBytes(24).toString('hex');tokens.set(t,user.id);return send(res,201,{token:t,user:safeUser(user)});}
   const me=userFor(req); if(p.startsWith('/api/')&&!me)return send(res,401,{error:'Please sign in'}); const d=read();
   if(p==='/api/bootstrap'){const partner=d.users.find(x=>x.id===me.partnerId);return send(res,200,{user:safeUser(me),partner:safeUser(partner),sessions:d.sessions.filter(x=>x.participants.includes(me.id)||x.ownerId===me.id),goals:d.goals.filter(x=>x.ownerId===me.id),journal:d.journal.filter(x=>x.ownerId===me.id)});}
+  // Mint a short-lived browser credential. The permanent OpenAI key never leaves this server.
+  if(p==='/api/realtime-transcription-token'&&m==='POST'){
+   if(!process.env.OPENAI_API_KEY)return send(res,503,{error:'OpenAI Realtime transcription is not configured. Add OPENAI_API_KEY to .env.'});
+   const safetyId=crypto.createHash('sha256').update('sage:'+me.id).digest('hex');
+   const upstream=await fetch('https://api.openai.com/v1/realtime/client_secrets',{method:'POST',headers:{Authorization:`Bearer ${process.env.OPENAI_API_KEY}`,'Content-Type':'application/json','OpenAI-Safety-Identifier':safetyId},body:JSON.stringify({expires_after:{anchor:'created_at',seconds:600},session:{type:'transcription',audio:{input:{noise_reduction:{type:'near_field'},transcription:{model:'gpt-live-transcribe',language:'en',prompt:'A private relationship conversation. Preserve names, punctuation, and the speaker’s exact meaning.'},turn_detection:{type:'server_vad',threshold:0.5,prefix_padding_ms:300,silence_duration_ms:700}}}}})});
+   const result=await upstream.json();if(!upstream.ok){console.error('OpenAI token error',upstream.status,result);return send(res,upstream.status,{error:result.error?.message||'Could not start realtime transcription'});}return send(res,200,result);
+  }
+  if(p==='/api/cartesia-token'&&m==='POST'){
+   if(!process.env.CARTESIA_API_KEY||!process.env.CARTESIA_VOICE_ID)return send(res,503,{error:'Cartesia is not configured. Add CARTESIA_API_KEY and CARTESIA_VOICE_ID to .env.'});
+   const upstream=await fetch('https://api.cartesia.ai/access-token',{method:'POST',headers:{Authorization:`Bearer ${process.env.CARTESIA_API_KEY}`,'Content-Type':'application/json','Cartesia-Version':'2026-03-01'},body:JSON.stringify({grants:{tts:true,stt:false,agent:false},expires_in:600})});
+   const result=await upstream.json();if(!upstream.ok){console.error('Cartesia token error',upstream.status,result);return send(res,upstream.status,{error:result.message||result.error||'Could not start Cartesia voice'});}return send(res,200,{token:result.token,voiceId:process.env.CARTESIA_VOICE_ID,model:process.env.CARTESIA_MODEL||'sonic-3.5',version:'2026-03-01'});
+  }
   if(p==='/api/chat'&&m==='POST'){const b=await body(req), msg={id:id('m'),ownerId:me.id,mode:b.mode||'solo',role:'user',text:b.text,createdAt:new Date().toISOString()};d.messages.push(msg);const reply={id:id('m'),ownerId:me.id,mode:msg.mode,role:'sage',text:aiReply(b.text,msg.mode,me.name),createdAt:new Date().toISOString()};d.messages.push(reply);write(d);return send(res,200,{reply});}
   if(p==='/api/link'&&m==='POST'){const b=await body(req),other=d.users.find(x=>x.email.toLowerCase()===String(b.email).toLowerCase());if(!other||other.id===me.id)return send(res,404,{error:'No eligible account found'});if(me.partnerId||other.partnerId)return send(res,409,{error:'One of these accounts is already linked'});me.partnerId=other.id;other.partnerId=me.id;d.links.push({id:id('l'),userA:me.id,userB:other.id,status:'linked',linkedAt:new Date().toISOString()});write(d);return send(res,200,{partner:safeUser(other)});}
   if(p==='/api/unlink'&&m==='POST'){if(me.partnerId){const other=d.users.find(x=>x.id===me.partnerId);if(other)other.partnerId=null;d.links.filter(x=>x.status==='linked'&&(x.userA===me.id||x.userB===me.id)).forEach(x=>x.status='unlinked');me.partnerId=null;write(d)}return send(res,200,{ok:true});}
