@@ -1,0 +1,136 @@
+{
+  "users": [
+    {
+      "id": "u1",
+      "email": "maya@example.com",
+      "password": "demo123",
+      "name": "Maya",
+      "partnerId": "u2",
+      "avatar": "M",
+      "createdAt": "2026-06-14"
+    },
+    {
+      "id": "u2",
+      "email": "jordan@example.com",
+      "password": "demo123",
+      "name": "Jordan",
+      "partnerId": "u1",
+      "avatar": "J",
+      "createdAt": "2026-06-14"
+    }
+  ],
+  "links": [
+    {
+      "id": "l1",
+      "userA": "u1",
+      "userB": "u2",
+      "status": "linked",
+      "linkedAt": "2026-06-15"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "s1",
+      "ownerId": "u1",
+      "participants": [
+        "u1",
+        "u2"
+      ],
+      "type": "joint",
+      "title": "Repair after conflict",
+      "status": "complete",
+      "date": "2026-08-14T18:30:00.000Z",
+      "duration": 42,
+      "summary": "You both slowed the cycle down and named what sits underneath the argument: Maya needs reassurance; Jordan needs time to regulate without the pause feeling like abandonment.",
+      "highlights": [
+        "Used a 20-minute pause with a clear return time",
+        "Named reassurance and autonomy as core needs"
+      ],
+      "nextStep": "Practice the pause-and-return script once before your next session."
+    },
+    {
+      "id": "s2",
+      "ownerId": "u1",
+      "participants": [
+        "u1"
+      ],
+      "type": "solo",
+      "title": "Finding my voice",
+      "status": "complete",
+      "date": "2026-08-08T17:00:00.000Z",
+      "duration": 28,
+      "summary": "You explored the difference between keeping peace and abandoning your own needs. You identified a boundary that can be clear without being punishing.",
+      "highlights": [
+        "Recognized a people-pleasing pattern",
+        "Drafted one kind, direct boundary"
+      ],
+      "nextStep": "Say the boundary out loud twice before sharing it."
+    },
+    {
+      "id": "s3",
+      "ownerId": "u1",
+      "participants": [
+        "u1",
+        "u2"
+      ],
+      "type": "joint",
+      "title": "Weekly connection check-in",
+      "status": "scheduled",
+      "date": "2026-08-22T19:00:00.000Z",
+      "duration": 45,
+      "summary": "",
+      "highlights": [],
+      "nextStep": ""
+    }
+  ],
+  "goals": [
+    {
+      "id": "g1",
+      "ownerId": "u1",
+      "title": "Pause without disconnecting",
+      "description": "Use a timed break and always name when we will return.",
+      "progress": 72,
+      "status": "active",
+      "createdAt": "2026-07-20"
+    },
+    {
+      "id": "g2",
+      "ownerId": "u1",
+      "title": "One curious question a day",
+      "description": "Replace assumptions with one genuinely curious question.",
+      "progress": 45,
+      "status": "active",
+      "createdAt": "2026-08-01"
+    },
+    {
+      "id": "g3",
+      "ownerId": "u1",
+      "title": "Protect our Sunday ritual",
+      "description": "Phones away for coffee and a weekly check-in.",
+      "progress": 100,
+      "status": "complete",
+      "createdAt": "2026-06-28"
+    }
+  ],
+  "journal": [
+    {
+      "id": "j1",
+      "ownerId": "u1",
+      "title": "What I needed in that moment",
+      "body": "I wanted to know we were still on the same team, even while we disagreed.",
+      "mood": "tender",
+      "private": true,
+      "createdAt": "2026-08-16T20:10:00.000Z"
+    },
+    {
+      "id": "j2",
+      "ownerId": "u1",
+      "title": "A small win",
+      "body": "We took a pause and actually came back at the time we agreed. That felt different.",
+      "mood": "hopeful",
+      "private": true,
+      "createdAt": "2026-08-12T18:15:00.000Z"
+    }
+  ],
+  "messages": []
+}
